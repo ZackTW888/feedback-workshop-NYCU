@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回饋練習場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@600;800&display=swap">
+<style>
+/* layout: one phone-width column, a station bar on top, one task per screen, a fixed action bar at the bottom */
+:root{
+  color-scheme: light;
+  --purple:#603E8D; --purple-deep:#4A2E70; --yellow:#FFC94A; --teal:#36C2B4; --teal-ink:#0E6F66;
+  --mist:#EFEAF7; --mist-2:#E2D9F0; --ink:#2E2640; --muted:#5E5676; --cloud:#FFFFFF; --note:#FFF4D6; --bad:#B4412F; --bad-bg:#FBEAE6;
+  --font-display:'Nunito','Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  --font-body:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+  --r:20px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--mist);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.65;-webkit-text-size-adjust:100%}
+button,textarea{font:inherit;color:inherit}
+#shell{max-width:520px;margin:0 auto;min-height:100%;background:var(--cloud);display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:var(--cloud);padding:12px 16px 10px;border-bottom:1px solid var(--mist-2)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:800;color:var(--purple);font-size:16px}
+.brand img{width:30px;height:30px}
+.brand span.sub{margin-left:auto;font-family:var(--font-body);font-weight:500;color:var(--muted);font-size:13px}
+.stations{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.stations button{position:relative;border:2px solid transparent;border-radius:14px;background:var(--mist);color:var(--muted);font-size:12px;font-weight:700;padding:6px 2px 7px;min-height:52px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2}
+.stations button b{width:22px;height:22px;border-radius:11px;background:var(--cloud);color:var(--purple);font-family:var(--font-display);font-size:13px;display:flex;align-items:center;justify-content:center}
+.stations button.done{color:var(--purple)}
+.stations button.done b{background:var(--teal);color:#fff}
+.stations button.now{background:var(--purple);color:#fff}
+.stations button.now b{background:var(--yellow);color:var(--ink)}
+.stations button.up{border-color:var(--yellow);border-style:dashed;color:var(--ink);animation:nudge 1.6s ease-in-out infinite}
+@keyframes nudge{50%{background:var(--note)}}
+@media (prefers-reduced-motion:reduce){.stations button.up{animation:none}}
+.stations button:not(:nth-child(4n))::after{content:"";position:absolute;right:-8px;top:50%;width:6px;height:2px;background:var(--mist-2)}
+.stations button:focus-visible{outline:3px solid var(--yellow);outline-offset:1px}
+.art{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:var(--r);background:var(--mist);display:block}
+.remind{background:var(--note);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.remind p{display:flex;gap:10px}.remind p b{flex:none;color:#8A6200}
+.empty{border:2px dashed var(--mist-2);border-radius:16px;padding:12px 14px;color:var(--muted);font-size:15px}
+.empty button{border:0;background:none;color:var(--purple);font-weight:700;text-decoration:underline;padding:0;cursor:pointer;font-size:15px}
+#cardImg{width:100%;height:auto;border-radius:var(--r);display:block;box-shadow:0 4px 18px rgba(46,38,64,.18)}
+main{flex:1;padding:20px 16px 120px;display:flex;flex-direction:column;gap:18px}
+h1{font-size:30px;line-height:1.3;margin:0;text-wrap:balance}
+h2{font-size:23px;line-height:1.35;margin:0;text-wrap:balance}
+p{margin:0}
+.eyebrow{font-weight:700;color:var(--purple);font-size:14px;letter-spacing:.08em}
+.lead{color:var(--muted)}
+.guide{display:flex;gap:12px;align-items:flex-start}
+.guide svg{flex:none;width:54px;height:54px;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px) rotate(4deg)}}
+@media (prefers-reduced-motion:reduce){.guide svg{animation:none}}
+.guide .say{background:var(--mist);border-radius:4px 18px 18px 18px;padding:10px 14px;font-size:16px}
+.card{background:var(--mist);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.sticky{background:var(--note);border-radius:6px 6px 22px 6px;padding:16px;font-weight:700;font-size:19px;box-shadow:0 3px 0 #EBD9A6;transform:rotate(-1deg)}
+.sticky small{display:block;font-weight:500;color:var(--muted);font-size:13px;margin-bottom:4px}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:block;width:100%;text-align:left;background:var(--cloud);border:2px solid var(--mist-2);border-radius:16px;padding:14px 16px;min-height:56px;cursor:pointer;font-size:17px;line-height:1.5}
+.opt small{display:block;color:var(--muted);font-size:13px}
+.opt:focus-visible,.btn:focus-visible,textarea:focus-visible,.chip:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.opt.sel{border-color:var(--purple);background:var(--mist);font-weight:700}
+.opt.ok{border-color:var(--teal);background:#E4F7F4;font-weight:700}
+.opt.no{border-color:var(--bad);background:var(--bad-bg);color:var(--bad)}
+.opt[disabled]{cursor:default}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tri .opt{text-align:center;padding:16px 6px;font-weight:700;font-size:19px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--mist-2);background:var(--cloud);border-radius:999px;padding:9px 16px;min-height:44px;cursor:pointer;font-size:16px}
+.chip.sel{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:700}
+.fb{border-radius:16px;padding:12px 14px;font-size:16px}
+.fb.ok{background:#E4F7F4;color:var(--teal-ink)}
+.fb.no{background:var(--bad-bg);color:var(--bad)}
+.fb.tip{background:var(--note);color:var(--ink)}
+.fb b{display:block}
+textarea{width:100%;border:2px solid var(--mist-2);border-radius:16px;padding:12px 14px;min-height:92px;resize:vertical;background:var(--cloud)}
+.tag{display:inline-block;border:2px solid var(--purple);color:var(--purple);border-radius:12px;padding:1px 10px;font-weight:700;font-size:15px}
+.tag.t{border-color:var(--teal);color:var(--teal-ink)} .tag.y{border-color:#C98F00;color:#8A6200}
+.meter{display:flex;justify-content:space-between;font-family:var(--font-display);font-weight:800;color:var(--purple);font-variant-numeric:tabular-nums}
+.chat{display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;padding:10px 14px;border-radius:18px;font-size:16px}
+.msg.them{background:var(--mist);border-top-left-radius:4px;align-self:flex-start}
+.msg.me{background:var(--purple);color:#fff;border-top-right-radius:4px;align-self:flex-end}
+.msg small{display:block;font-size:12px;opacity:.8}
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;gap:10px;align-items:baseline;border-left:5px solid var(--mist-2);padding-left:12px}
+.row b{flex:none;color:var(--purple);min-width:4.2em}
+.summary{border:3px solid var(--purple);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.summary h3{margin:0;font-size:14px;color:var(--purple);letter-spacing:.08em}
+.summary .v{font-weight:700}
+.summary ul{margin:0;padding-left:1.2em}
+footer.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;pointer-events:none}
+footer.bar .in{max-width:520px;margin:0 auto;padding:12px 16px 16px;background:linear-gradient(to top,var(--cloud) 72%,rgba(255,255,255,0));display:flex;gap:10px;pointer-events:auto}
+.btn{flex:1;border:0;border-radius:999px;min-height:54px;font-weight:700;font-size:18px;cursor:pointer;background:var(--purple);color:#fff}
+.btn[disabled]{background:var(--mist-2);color:#8F86A8;cursor:not-allowed}
+.btn.ghost{flex:none;width:54px;background:var(--mist);color:var(--purple)}
+.copy{font-size:12px;color:var(--muted);text-align:center}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.steps3 div{background:var(--mist);border-radius:14px;padding:10px 4px;font-weight:700;color:var(--purple)}
+.steps3 div.on{background:var(--purple);color:#fff}
+</style>
+</head>
+<body>
+<div id="shell">
+<header>
+  <div class="brand"><img id="logoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABwCAYAAADG4PRLAAAtWklEQVR42u19eZwcVbX/99x7q3qZhZBAgBAIYRGY4IIJJJClExEFXHj47PGxJSFg8OfClgDq+2lN/3gikEXyePrRCJpFXKaf+mQNIsx0JsSA5oFoRjZNAElwWAKz9FJ17z2/P6qrp2cyIdtMFqU+nw5kprpSVeeec77nnO89h3DgHeTBo/b0OGro2EAA0D5yHGezaQsQ78wFGEyN6ayo/n5DdgNnkLEH3Ms4EG7SgydaUxAjR47jbLbRbO+8VMpTI3FovNaYhHG1y6VAAgDFHBM3XMq7XCgNG1Pc0TUAYHoO9kAQ6H4rQM/zRGsrRC6X0f1/d0VqyWjL+gRNfJJgOgHAWAaOIOYRIKoHOA7AYYYoP6UFk0/ERWbqJOB1ItoM8EZLeI6tfVYZ+8IP1t64uf89ZDL7txBpf9S0/kKbPe32E8D2TCFoqmWeAMbxUqoaKRQIBIaFZQazDT/girGMHpOi/5KAIAEiUf4uw1gNY3UXgZ4H+HfEaDN+6bHlj39lU/kd8WA+JzMITSDKwP5DCNDzPNHePo6qTduc1OIJgPgEw54LxvsdFXcBwFoDwwEssyWGZQAEpvKfBDDRgI8WiZWYmDn8CTEBYIIQJIQUCoIkwAzNOm9ssHj56vlfG2xN5JZUHL4r6aMP9xzQAkyn07KhoYGjlzN76sKjBDlpJv4MgU93ZByGNbQJALYGIGZAUKhQtEOsskvPycxMTChrBZGKOzUo+N2fXt427+fpdLN8J9+5s5pHBObHzzscLBM06d6N0c9295pqX2kcAGQyGQMAl03/1kSyuJIJ/+pItz4Umo9ikNeIBEYk+0mCGWBiZi6jTwITExFhIAFHAtre+UTlhSFC6duArREAfwrAzzvKiHWPjiaPgAwDPBpkDgGwEdm0ALLmABEgUzqdFZlMY1lwi1JgOY8Yn1DKRWCK1UITRH3uj8Fsyy9fCEFCkiIpJKiMVSws2FpYNrBswGVtIkAIUiSkJEGiz/nWGljWYGtN2aQSiAUYFkQOgO5Be/ymdkIGAKMBxGOY8RBaO/ZoYai9Zy6bZTZLJpuFmT311g8KGf+/BFwghEJgiuwHeQuifkJjBpeFIIRUMiYFSVg2CIyfN6xfMjZ4AeAXAGyyEFsU+DUQdWmyRQnSACDAyrJNWG3rmHkkg44QZI8hiOOZcDwxjnZUPC5IwrCBtRpSqlhgfEvEdwLAyJHtew5keoU1CYyTiXATN4/k/doHhkFzo8hms+bC1MJD4iy/TkSfU9J1SjrPFK502c9XWAIzCSkd6QIgBLrYw8B6glgN8Fpm909j2jpe2dNYLZ1ulnWvd4wmY95nyUwGYyqROIpIvOLbwk0rV9/4AOAJDEJMGKFPnHvunyBoDIQ/CuN/0xm63N3zg2qotY6yZJCFmT1t0UUC6puOco8u6Tz8IG+ISIIgq57QMIgc6QohJAJdejswpUfA9CvHiNalj13z0oBAqKOBAKAVwMiR4xjIoqGhgZEB4IXntbe3E5BGR8cGmh59eTps2Zy/WP7cCwDzzl5Rs+jhmT1RaJMZFOGlJVHW8LpzZ8CVJyEmCN18IRG+yy0pBeT0fqWBqZSncrmMvuSMBSNdx7ldSudCywG00ZpCjaNqwYEgHJUgthbGmt8T0QoB/PLO3NV/q9bm6akmObI39cWDEKNVUnMdHRsol2sy5ZQcpdNpkc1mzaBoXmtK0oyc5nXnrkVCnYHAMsAvo6hOweRTe4AMiHY9LqShAirZbKOZPW3h2ZLU95WMjSkFPaaM+ES1qQQAV8WFtRoW9n4m3LGs9dpfR4JJp9Oyo6OB9m5qi2ln86o7vJIHgU+MlzRhfcDrzvs66p0MOv1wUdS7El3+Spr44ExuTocou3HXFgwNdiYlesmzpi7+spLyZgCkTaCJSPWF9LCOjEkQYKy5H8AtP8xds6Zag1tzTYYG6UXuVazNIMAjtLYKmhGaRn78vKuQkEtQNAZhio8ANqh1JAp6MU14YF45yFd4bSQjnbU74xdpMIPybDZrzjn+S7HDRx17Z0zFLynpgmVmEPVqHZgNkZCuSsA3xSet5a8tb7vu/u1lZA44wYVBZeXF8+PnHQ5JNyEur0BeW1hQJbMXnmFQ50oU9H0wcj6dfs+zAwX/QyrAKEtxYco7JI6Df+6q2LSi37ONr2Nm7aq4Mlb3MOx/dL/29uJse8YPBddOg+Fv9gtBrk0noLpOghSfBuhyJNRh6PQtQGLAN85lTSyaHoBXAOLHqBF/oJPv6RpyDYyEN3vqwqOI5AOOip1SCvJ9TCYzMxFxTCVFYEo5re0XVjx23Ybq7x/QAmtJxTGsdgR8fi+AaSB8DHXO+1CrgI4i4Fsfgtx3vIjlAIIcHJ4AAgu85f8FzPfBUg4snoLiv9OE+/KDKsDo5V8ydcFYV6iHpXCO83Wxr79jNkIoKUjAWnPTD1Zf6wHgMko1g53p36fm8/lzXHTWxRHkR8LhUwH6NJg/hbiS6AlM/3i3jwYmlIRlQNuHQPgpCI/DoVfxRncB06f7RAMDONpTn/eZqTcdlRS1LWoA4TFDO8pV1to3LZvZy1Zfdy/A5HlNtL/X2QZNsOs/Nh6EWxFXZ6HLN0A/IXLFBz4NtvPptAcf3pXri91Fm9ls1lx61h0jEqJ2lRLuAMJjHXPiylrTHnBhyrLV190bVrsJ/8jCY4DYg2BOS25OSxp//3r64P0fRk9wO2pdCbDpI7x6R6Kgf4E3/DPptAcfZvYEt6QUe57gnVAw2r04r1F0dU1Rh+fNb1wVnzKAz9MxJ6m0Lq0p0FsX/CSXeT0K7PFPdnBzWiLdwEQZy+vO+z7qnSvQ6RsQgBpHIq8fxf2nnU2ZjOWWlIrCjiGLAyNBzJ626Ecxp+biot+9jfDiTo3ydeGh13re/tR96zP5fwSgsmfBvCcwrp1Q26VwiHgKjjgRmhmEt0HyFBp/z2ZuTstdDeJ32YRGwps1deGXY07NxcWgO9hW80Lhbdm88fz71mfynueJf2bhAQBlMhaHdhCdt6oEa78GQYSkFAh4MY2/ZzO3pNTuCG+XNDACLbOnLviQlLFHrNWaYSUQMhiY2cSchPR1aU2Pzx/JrptXGKxE8D+KbwQDWD9XIXj5eUgaBSOPwqR7O/aEH7OTGuiJhoYGvvSsO0YQqRUAs2UWVcKzjorJQPvPSJ/Pz66bV/C8d4XXT1MYrSlJE5YGkGiB5SfpjHv/Dnh7RG5SO6d94yiTaTSzpi78ruvUHFkM8joqvDJgpXBgrdmqrTl/5br5b6bTzTKqug9maQoAGho2DGnc2N4+jgBgSM0+i7UQ9tWwStEqgCEUYFWm5TOuk/x0qUp4YdqerBBClUz+kpVrbnzOS3kqk20cbLS51/OjDKZBT6RPn26BHAD9J1jZQQTe04q82qHpzG7gyyctGm6JbtcmsEwQ1AtaTNxNqkKp+6aVa258YO74uU4mlwmG4kXOnnbbRVLE0sbaWsASg2lwTRwxIFiS2Bqw/0NaTQ8OZlkpPDLhtVz1Enz7BgBgQ5aHjFIRad/MaQv+K6Fqv1AMenpDBmbjqLgMTGnNmNWdqTIhd1BTYxFwumzawhvibv2t2gTly9OQ6R1RCAtKfuHC5Wvm/XQoQiBem07AlhRN2XGyercFWH55duaU296rVGw9W0MMjupYTJBMRMXA6FNXrpn/3ODT0MPVf9GUbx7skvNXIVS9YW2Idy97tAto0Tgq5mhdemaj6HpfuUKPwVyYzCGtcnv5zcH0gQyIm5VQyjeBAUWoEzbmxmXR725aueb651IpT2Uyg5tl8dBEGYCFdEcwo95YTUSk+tbShgZhGKOZiQ4ZiUPjAHWXF9PgmWsavIUutm86s2bWlMWTHeV+rBQUe5ljDOPImCwF+aePERO+lU43y7LpHNQj5LswHZxQL4PxF9dJEDMHYGhmaDCbd1h2mvt9dvZ8MPyYkxQEPJ3NfbE7JCHvv6yAAQUYQXWG+ZokCQJzf8NLRPMyuRl6ABr7oKlCOt0o7lh1dYlgP8fWvBl3a9yYk1RxJ6lcJyG390XXSah4+bzo46jtnU99z3drY4EpbhJkrzkQtt/R9oDDpanFExzIJywbRuj7QuDiJGQQFFYta5t/7t7JcYa+8OLULaMTlPyoYVNn2VoCjgDoy9XsBSIituwT4RsMfttaFlICloUBY4wQ4jrm8n4YMBMJssx5An+DQN1gIUiIN7pKb96fXZd5c/BR6OAfA/jANIAsJPNVSjnkB9pEXHQmImM0W5C3F9cYe/BEJvflvwG4K/rpzEmLjpQuvryNaQAHTk/nwqXrM32q11ectfA9VtN1XIViQ3dqimNmdN/SH4CFaUA6sDZ4RrnL8OXQsyAkyzuxCMzGdRKyFBQeXN42/7xIU7EX9w4iBYGREOiAfZHrTybQ09xHAwVZa/LW6pOPVYXNeA3izaPfpOGF4eYlGjaemNZZ1hymAJkFSTJstpZU6eQTjf/Glu5R9GztZq7ihmLf7t5qlg0dGyjcQt5oB3JVfXxgayr8u3D4QlclaqxlgwqGJrJsQRALezV17x0ZZGwml9FogM7kMpqs3e7icZh0JpfRaId+te7V8Px3ADEOhecvXT9XhzXL/cNsZrONJpPL6LKbGjAA7mNCc7km4wFiI3CxYY0KdmYYR7ky0MUnl7XNbxmDt0Xmn7xENMRWkQFgzvTFHyPIDzD4mR+0XvOLKiHyNgIMTSKZF6cuPlUJer82JY5CBwZYkoImcSeBOJXyJHJ4t9IwNK6CWlOQx9jaFa5MXmjZQpDA7KkLV/UE9KmGdZ2lDDIV5F8xodEGESZ7gSPjBCYT5Q2EEKqk811SyZ8DQGuu6V3tGyKfl0HGjkX9BQm3/sJC0B2Ugrwu+t1+MnbQOTUuLssgY72UJ7fxgZlQKATgPMMaHP2OyTgyBmY8fNej1/w9nU7LA5HufiAcUd8aMM5gtjZsykAKgPSNb8H8aQDA9F7rJyoID8SXpxYdR6D3auODKimrKOvPvwBAHWVNffcYusOy/SuDBXEl3hHG+oKB0y6fePthmUzGRtUYUY0+LTDVVQmnnHYKGzgIKf2g0KMhHgXA09/1fUN3lDWLmX4dBEVd3jvJABFbY1wVrzWunQQAjems2CaMYMa0ssi5/AOrhAMmXn9323Vb3qVJDHGoFCYTaOWaec9b2HYlXeJKoEssSILB0wAgarogAFAulzEePMGMCcb2+j8uf4ks5cJAcWhLOe8eQCrlSYCYiNokKVTanoDJsgEIp1cDSeHBIwC88UP1RxDxcYZ1lf+DCAGNWQuETeH2lwc1LAfNF2vt7nd+3RI/FiofV/lBDTCfPPfDtxwUAkkm0Z4OSTwisCcqEUtYyzbyf0KQ0KZUYFf+EQAashv2GwEqDvRgFEGYmckE+01YFGEMZvlUoItVG2KILBsWQo7wS+5xYdiRFZWWiww6Oew9Fl0gDN6ZsWnso51bemt0+/aIWGNaisOEcCq9YPpolA1oW2Rn+vU8IzAzS6ESsVjsYIDJQxPtKSNjcOqgQNG3m5jtq0Ko3mdkto50wczvifxglU+jE/q2h2MWQoJAz2eQsel0Wu4fW8GyZTIc3SxIIOp7Ft4ag0BsKRYAQBOauKGhgQHAhD1jqE+Zg611ZCxhffMfAHFkjXZTlQk0KO+HPXgiu25egYG/SpLo29tNAALvCUErICK/RsBYhi03jus9mYEXqjM1+zpTkc1mzexpiy5LqJrJfUwMwyrhggl/OO633a978ASBOJPJMAAqUtfzhvVLslpriWRJF6yj4hfOnrrgQ9lso4n4p7soPAEiPu3hX4x4f8svh+3pc0ZhHRH9JSRZRa3BwpZ9BIyN2qqIsNMtwMARve6vT2Z14/7SirIhu4EvPevmEQTxzcD4NuLoIOqUwxbC4qsZZGyVNnE63SyyuUw3g74mhUO9WltRXABiydzx33NCDd95U5hq8RSI7MTWe0+gWGzqMAzrRrkX3O6Hg5Ww7sW+ah02WmTGkUDYPUogTE4rEI9gtuWWjWEjOMsWLLElkvY+9X3pcZRBxgrfuclViZHG+lxpTMfQMZWUvvFX/nDNvFx/pkCoWWm5YvW8FSVdWO2ouIw4MkQQgfF1zEmeUqrpviqbzZpUVa7xnYXXonIzMvq0lvs+YAVfpcRBj+SmTzdoauJBIry8Uu21GETlziyHhM+VtQIAjguSCQB14cIsm1AiYjYQGq+j0gFpX5rORnNpavEEJdy5vi4YIhGtciuEFL4uvGUgbow0dfsxg7jasNFl/mdomoilr0tWkPj6Faklo1tzTSZML76D8LhF5WbM0Ke3/GoSSf6+MGbR2ilTutDURKA9yxVHbk0wXg9rsJVQAswMEB/kha2hQ65L3sSSAMW5CkYRQJYNmKhrb+xJwA5ZA0zC2v8UQkpmW/k5M6wrY8LCeHe3XbelNYUBs0XZbNak081y+dprn9Km9B1XJSSXLxRCdM2OjNX7trSAdgBoUtyicjRDT2i578NQ8jfMZt7jMy7YlG5ulhjMxrBMb3Po9SrvgGFBTMktdaPcSiqtNk4OMZyqoi8DIMuWiU1xHwOXctenRZfFneQZfh/gwsZRrioFPU8dQ93fSafT70hxzGbT1oMnSDheSee3SKlEpSUlkfSDgnFV4t+2C2iYKc3NMkcz9ITc/Z9xD657GBZX/y71L6tTLS0q2zi4RW5DusBsUW4sXCUZOKWufK8AA+QVE8u+IJgAZqvLLRvDGuJehy5l4HJHGbgEfYFLeI+w4KszuYwu0zz4nQhS7elxtDx37Vts7Y1KuH0BTVS9HgjQcGitstRoJrbdOy9x+KE/DTo7Fz6R+vhd47/3PSc3Y4Ye3FAJkCDN3D+4ZIBZWqVkRYBSKN4/C5wRcClWgEul1xqziTlJ6ZviyhVt16/eWYpjpFnL11y/sqTzqx2VqAAaEGRgiibuJE8p1XRWAE26uVmCyKaamuTpbfd/OzZq1MLSa6/98nfTPnF9qqVFrZ97pd6nxF5hXUMM01fUDBAJBVZlHL9PgMucCnDJVwEXZiEU+aa4NQ51I4Np19J82bJCyqsN636AhoRvSlaS+voVqVtGj/zCOM42Npoz1/zPqMLZp6+KHXbo50tbXl1f7FGXgj2Rmz7dDFIA34/aCRgotW2fLQKIjNDaVARY9H2fCUEVXybMhZIkC0rsOx1kMhXgwlXmDNaRMWGNblradt2WxnR2l8pcZc1Sy3PVgMb2AhqrWal4fQBnYbax0UxYfU9KI7bWGTbsLP+111/SBfOppz/60R6gCXuKON9Ru6xJEokQu/SRDIJYd9KvCNAlWwBQrA4aORQgIGVddQ5yb2pfCFxqtgEuSsZkKeh5apMMgUuZM7lLRy6HvoBGOBVAAylkUMqzKNj0jB/+7PtQ4iEZj43RnZ1vU0FfsP7sT74UmdUhhd+CDyKIqq0N5VQa0LP12INLFQF2HTk2T4zOPmkbZiYhQLCHVhcQ9wqZtaEauPiW+gGXsJE2X53bKeCy3bSxbU1BVACNdInAzIIg8wYmIeilOUeJ4vsOvUKxirEfBFwIGtd9+JP/OxSIEwNwYwjyEEECXCmwI2xdSHi77O9D/cxmGw0IbxAJULkCzCAWECDGEdXpnb1CZs1UAxdtezMuITs82EXgsn0tzOgI0BRN4bGYSEjVHZjO99XhhWuPxVun1rPpKQQmoXq0Cf7tibM++esw+zJD76W2s0f29X7MBAEBvFamggqRLnMrANosaNuNjAweu7dM54ebmw869cmHLrnipG+Olyp2ZZhxiXpqh8AlMKWtZreAy8DHXw/eKsBMw9e9NrPkmq6/XTRabLriKA4OUpB5DY5JdeSPXy59auqDuXRzs5ze2jrklJJK2tLaY6qTKxxW6mEZr4RWsYEq9UCAN5WrD6gMxYAFg44P0zvtPISTQAQAdEpZJwK9+K0zD/4fmdfCiGhHcFXGhXXT3bsBXAaqIKSbm+X6pVcGIOLHVqcmPPuV44I3ph0CUbQgzbBJRUf87GU7ak3P8D9PH/udbGOj2RtYoMK7JTouTBb19gMoz4raWCkn9Qobz1Wn4ZmIjDUA+ISojDNk++WamsKbO0gNl1Ye+uqnjxxdOJhYFS2xpDK1vwxcaPeBCwCkm5srcV22sdGc3vbApIlrVz2kVPxnJi6Giy6fWRLbmMDon23Goau3yny8ZGIUa9yjktOubOAF8dyPfy/J4GON1YiQS6RUIPlcpZxUqQey/LO2QdXJIMsaxDSm5tWXRkW07yEBLtksAUxBrXSEARdGSPPiZ8eQf7AD1a3Bkihs6R4Bl13aVEpgFqmWFgUA2cZGk21sNJNyD35w4mMP3k2C1grX/Yjp7rZcDCy5SgjHEaN/9DcesfpN6FoFRBx1iCVz537PGcqO/54XvmPd1XksQRxm2YCiXCiRCEyJiei5Sjkp8iOS/ee08fMiDJbDXKi11lGxOIjeG5V0hnIf4NilL82W5JAsGhSOjOMvV43FW++tM4mSEqaz+7sr2q5ffc6SJTGk06HZZY5mJBG47OM9T6Sbm2WqpUWluVlGG6tyM2Zoz/PExN+uOvv0x1b93Co8IRLxi9gY0vm8YYBVMikCl98YtfLFP4/8XQ8FtcqS5TBDo0thhuaZzquy2cadLjntsvksM//YiA+4Ki7A0NHcIUGSLNvXdUH8NQR8zVaV/QjdtfaGLbOnLXpeknp/YH0OmWlkBUnBbCcDeKBhCEKJdDots42NZs5pt06wm+3nN3f1WK6RQhYsdL3Ci589WnQ9mTek+T78Hlh19dWlKiJlv5pF6C6z1dfnZrlxbe37pBDnrbL8aZLyA8JVMD090F3dhogEmFnV1igOgs3BcOecsd/eGLx11qg/yiAgLi9mIgjflKwg9fUrUkt+dmfuqlc8YMh4slbwlOp+DsSwUippjf7z3U9c3RltQFURF5FypGdj4e+FkO8nAwtAUJmLSESpEHcPFSubSScXL0l0sYj9LW+CU+oFawZpBgH05oRaQYb/5/Q196+DEA+Q0b/V4L8G+dgbJ37k7WIWaW7IZtXwI5I1WqoRRtsxQuJEMI3f9JidJIAGmUjAlnzYfJGZyBJBEiAYbJxhBymTL6zDW/kL/zjpgk1/JGCmf9t3Ek7dVcWgJ5wwE2ZobMxJ1heD7gUAXdiebhbIDu6byOUy2vM88eKjmBJxdKmKowumdWFNCwI52D5FSwta3Wc/BJHQxgdAp16cumV0uNo8MRQcl7iTPDPw82b4+k7JopwTKhtImddEgVUyFp+iksmbyY21CKZn4wn/+U1tyWdOb7u/vebw5LM+4zkT6Gdk3PmNTCa/LWsSc6TjNMBaBJ2d2haLFoKICJKZDSlJqrZW6e7uO199ZvOMx8+9YFOqpUV5XM7QmPwWKR3apZLTIIzle+mR2pOIxEk6tISiT322LKNK0beai2jZtvm66BOJiIFGzNa4KpF0rDwLAHmpwWJneyLMuNw8AhDf1Nq3JqHooD90ou7ZbuikZIQkHXDY3It1oWCCzk5tS74lIePkOEdI1z1exNwTpescQ0oeQoKkLRRt0NWlg64ubYt+ufpLCqG5tMxsVF2thJRbbVfPZU9MPu+zL152WRHsidyMGbpScjL2RiUcUV1y6m2DHJacyoVuGkz/Byk/GuZnK/CJSQgZmGJnTNjHAaC5zGUS0fZlBtOP2q7fyGz/IKWDaOwbyrkZBv0rAK7e2rTHpaJMyHGJqcRIYwIO/REwqnkz3E5LSLiCbWVrNBEgCaQACBjD7Adsfd/aom+tH1gONIfzHUkQSIVCqyw4y2AtYjGh6mol+/49VCie/njq48vSzc0ypAWG/izi0AxUciKCCHTJxMolp0wmY9PpZjGYpF5r+VMh+uxN3ivhgoF1S3PzK4y7PptbmlJNsnyD90tSvTCdIANbhCDxoTln3jEqk8lYbw/NaDmO61cqIhFG68TJDsNj7nzxTWP0y86wesllrUF18ZWIysXdaKKjKP+d+k74gWFmI1xHOPX1itk+awrFi9ZN+uj562ac/0Kam2W2sdH0rypEfNKBS059AM3oqNK/p+Yzg4ydlVp4kiAxKTAl7l18xCEHlu6tph323Z00PZK++qVvSrZqLBxZy9pViRoj/caKA90jjksaAAYuFRlrZV2S6p7p/lqQVBNMT+GXMpEQqrZWkpTEgGGwZoZhwIR5bdhwumf4s+j3kJJUMilVXa20xr6g84VrC50d45+YfO5P4HkCnieyNHAuNZPJ2N6SU/Ad1+nHobG9HJo9JgVXbxxiXOyquCqbzzJ+IVnS+RILcV+1pm4TjJZbO2LW1IVPOCo2QeuSAZFkwCrhCm1Kf8wffvSpIZd09+pgvaWihXNiquauXpRXLhWpmNS69JR7Sd3pS6+8MgCA0x574Cwi+j/E/GERjx9EUoKNDeciW+7d+y8IJARISrC1MIVCN0ishhA/Mh0bf7X+k1fmo2zMzlQTGExNaKLnp8QPcoW7QQh1mLEavawAGCVdqU1w1rK26x7dg+Q6AcC1kxbF33TwZyXVGG21JUCEvJ+E8HXhkeVt88/u31SwT5eKplSTRA5aEK2UpCYE8KNIWWjjW1fF30uvvvJhgB7avZv1RHM2bWeedccICoIBybkRx2XplVcGKa9F5dBqfzf5vEcAPHLm+l+PMgX/DAafRuAT2dpRzKglsGJAQ4guInQwiRcE28cNu79dP/Xsl3pjQpZZwGaJzM72EC2TqrbOmrLgRqWcFSZs+tcH0DB4SbrBG9/QsEHvztz5VMqTuVxGb3VxQUwlxlSGY6IShJJgWl6lqQMLMFNWTaHkz0o6f5MQoi5qTRUWFQkW+noAD+0OzTCdHkeUJTsrWNjkqpqR1f1Hmdkk3FpZ8Lt+sqLt+tVfOmdJ7OnWVuMB4vEvLXEAYNX4j2wG8PPyBwAwd+73nJdiRXH02rhduv7KbZrNpr1mt2t4LR294WV7xPQm9gCJ1C7wQzo24EvnLIkNL7z5k01afC7mJM/0g7wBkYxIwXEneQpG4POZzLzbd2c+xvQcbCuYZvOi66pa8wCAlUJJPyi8Gvjqnt5eBpl36pVWMXF3xlTN5aUgr1HVH1sJR/jsT12Zm79m17QwnEN7RWrJaM3mOQLi3EsSsIIkMezLtQn5njtWVWVb9qPj0sm3H+0oetqyrQMslavfVgpFxgSvxPJ1Jy5df2VhV3K1vXM4Fn/Cke491fs9mKHjTlKVTP62Zbl5Nw60ONT2CD9k6A5NpdlhC1uOtvOwIAlh+P8B+BB2IQ2RSkHkcrCB1R+NOYlEKShUN04HkSBjdEdnnm+cNXVBbOfpCqJPKmLoMrVEDF0yFq8r6RykrbUUGn1hTGAdGRuta7onAmjZlYU9fTrs9Ome2PSIbWLJ1dN2WBBJXxeKmu13I03NYQfN7rLZrAkd5bw/zJq64P6YU/PJyGSASAa6aFyVnHHZlIUf/2F2/n07e7PTEbb7JuIT+7cpIUAY60NJZ4KSsQn9u1vuNwcRAl2EsQEIvVvzwsbvkrTBewC07Cz9JGqUO3PaoplxN/HBynsOtc/EnIQq+d0//dGa6zem081yoO5Y6p02URLhP7QNPlENNBggZsNWYOGXzlny8KvALjluyyhsDzJoG7A2er9uIhQyBGggAZGl7T3bwPnf6bkmO/qcJfUib242JmDuJf8whaUjXzjqFgDbZR+IdyK/Llt9/e+0DX7hqoTgvrt5bFzVnNjZ7d+4s6WV3v31/IhlExHg+mkiERHU/vzZNvSCJSIKdNFAm8f6x2nb174mmUHGyp7STTGVOFJb31LvbisTUwlhrV7+g5Zrn02n09utemw3II9yfErLf9fG94kE9SG/6oKR0vnq7GmL3huSg9JyR2Qlz/PEirbrV5d0KVvj1jscJr40DtAPM2sCKOHWScO8aMXaG/6STqfljkpM5TbVetaU2yY7Mv7FvrutmIWQomSKXdahTMj9aeA9GzswdeHChFMzrx/st66Ki8CUfj+GOs8Ie1ruKMAP96FvGY+4XzPsvwTRbEfGiA/QIZ4EQmBKJWvNkmVt1325PNhyB7PtwzHtsbdejKuS/F8l1HsCE9io6sDMOu7WqqLf/ZXlbfNv2RHGoB3Zac9rohceHF7rxs0fBcmjtNXc+4+FMLcQ9Cxa0TZ/vpdqUVV9tHfYTvHSaQtPVVBnA3wCs60/EHpUh9kqWCKxFaB2bc2qlWvmP7ezOGDu+LnO0vVLg1lTF9wVd2rnFINuU67+VEjLgfXb65Pqg8MnvhnsaEGoHYHn9vZmkX2isXPmtIVfUiL2K7LaRKaXCLKkCzqm4vNmTb3tt5ncjJ/vRCDLAMjzPMpk5j8J4EngQO8yuHPdi72UpzK5TDBz6sIrYk5yTjjGSKhe1qBggGGt/vwdq+aV0nVpuaPYiHZtbuCC5XGndmYfUwpmQYqJkNfan7xizQ1P72xo4XmeQCtEK/btDuDdOTo6NtD0MkthZ2gVlXc45bbJSsUftdZIhqmeAKfjbq0qBF23r1h9/bU7+w5pZyGv5zXRlsdG1flBz5OS1FgdUt5FZfycdIVhu9HCP3N57oZX93ZP7f29D2g222hmnnnbccqJPUaEw7TRFb9XSeKb4GmmtyfmR44LttcjezfnBxK3t7fT0t9c+ba29hIwGxGqewWVBsY3SjhjBZz7Lj59SX2UEHhXeKHw/m3iNw6Tjnu/EOIwYwJTwRFgJiHJsiloMhcvz2WK5QzXTlkkufMdkto5lfLUvav//cX3HXXWWzGn5jxtdOVGiEgYG2hXJUaTNJNPOGbif39neaaUTqdle3s7/zML78Lx3iGJRP2vlXROCXSxt3wWpuiMq+LSt4U5K3M3/CaV8tQDD3zHDMkM3Vwuo72Up5avuf4/S0HP9xNujWJmXVUkV6Ugrx3pTqvDsAdmpbxhUXOBfzbheSlPZbON5vKJ3zgsXjvs145yPuDrgq4WHoODuFujin5+wYrcDT/ydqOSsTuwnSIOSM3fX34gppIf6TOWrmoMeWBK602p5/wV6/7vK/9MY8ijcOqSSTcf77rJe6V0TioLT/URnlPrlHRPdlluXmNZW+2u1hJ3x0dxQ3YDZ7ONNih2pn1dXB9zkgNqohLueCdWt3r21Fs/GGnvgRDr7Qm/NZXyVCY3Q8+edutUN55sE1KeFGZa+i1wVeP4QU9rXUJd6sGLOmbxkI4hR9UQDs/z6O4nMp1BoM/Txt8QcxLbCLF848dKGW+dmVp4YdhJAryjtNuB6u8A4lwuo2dPXXyFpMTDBDpc65LpbzZjTlL5uvC4X+w8v7f2uXsUFRqMAPbiqYuPcIl+7ajYKWFw2me1WSGkUMKBMf7tmzdv/PKqF+4olU2q2T86IO6p1jXJXC6j0ymvtp4PXiyV89lAl2DZVkKtSqzn1KhAF9cVbfG8H6/5ytY9HZxJg5WFuOSMBSNdV93nyPhpRd0TEMipWnUMJo47SeHb0u/ZBp9ftvr631UjNRyY7ZErfv2yKYtSQqn/UsI9pRT0mHDWcHUZLvR5gS4+WipsveDuJzKdgzH1lAYzlXTx6V59LHHQTx2VPLfo92gi7lM7Y4Z2lKvYWh/Et3Xy1luzuUx3lOA9UARZDTgumvLNg+Mi/jUQXSNIUGD8/mCFiWFjbq30dT67JSEvXbXq6tJgjaylweT1R6TfF6fVfzumkp8r6TwzM/czI5aIRMxJwtelZ9myt6zt2p9VZ+p3B43thYNChlql4kJzUt+aRRBfU9I9dqBnBbMhIaUjXfjGv21Z7tobq6fEDckAyD3t6ZlBEwPEs6cu+qKQarEAOf1XZZkzbZV0pCAFw0Ersbn1rty8VdXmafpO5hmHuk9peUJ3BaBdNm3RBSTkDUo4k4zV0CboA1Qif+eomArH4dnPL2u7bnn1+xmyCZ6Dt1IbzeypC88UUt3liNhJxSBvo4p+lUm1AMNVccFgWGNamey3axPy3gidRS9wLwqTPM+j1laI1lyTifg7Hx/vJUfWHXQBs/iCFOoMgKF1yZRpEH0sDIgQd5LC16UnLfw5y3M3PDVUoI2G2sFffLpX78YPXqik/Kxlhg61Ufbbw2AYRK6KCQDQJniGQCuF1f99Z1hr63PdkSPHcUN2A5cbhPNgCSzKNlX/8ooZi8dZQ59h4EJHucdbtgi0v81iLG/EMI6MKQaDrb29y3/xq9l13yoMZRKD9ladbM60hZ8kcm5Tyj3RDwqwbLcxO6EgQUq6QgkHvi6UGNQmiX7Fgh/+Qcu1z27PxE1HuOm/tyyVrWxQaW9vj/ZjVMpArQi5KwNp9RUzFo8zVnyEmc8n8GRXJZS2PowJDIe8HdHXWsIIIZQr4wiM/7QxwXXL18x/pBob7LUhyEMRJ0UIc86Zt9bBid0I0DVKOjW+LgDMBuUWUdVEITCsIFJKuhAkUDLFgJj/yMBjYPEYC/kHoG7T8txle9TP9JKzF9TEtTzGBHwqC0wG6EwAp8RUQlg2CEwJzNAgCOqb+GCE5lLGVAKBDt6C4AWGty5enssUdzc1th8KsG9mHgBmpRaepFh9lQkXKelKXxfAjG3CjspLAjGIlJIOwlkWFr4pGgCvMHgjmP4CQZtgzWaCfJ2FeVsYFGy516mAVFYiAZhhZHEIg0aD+BgwHUfEYwEa5aoEAQRrA2gbIGwuwLTt4mIGkyEi5ao4tCmVAFrm2+DWH7Vdv3Fvx7a0b6B4+HBzUosnAHQtA2lHxh1tirDWRE1uRL/7Yw5nrtnyi5VSKAiSIBLlBjihvJlt5f+jSxFCWfQ/17CBDUfaGICYAVEePTTAQgKEUNKRMfimVCCmn4J48Q9y1/ypf3y4z+bI7y1o3p4eR72CvP0UZswF+DOOio1kthXTRQNoQS+ILffhD198tJ2VQmTIVNW2KGxTtd1ztxFYeXYNKtrvSBdEAlr7r7DAj7XWd5bJTGGDvhBU2X06hnyvC9LzRHt7ryAvm7LkUJL2X5jpIsBOcVVCWTbQNgBbY8JhJCAQi+2wo/eoxTgYNuwMyCLK3wqS8HWhBMJqJnG3rwv3/HjNV7bua8HtFwLcnkYCwOXTvnWyYf4YCTqXmU9zZKxOkIBlA2M1LBsOd+WWO4KDiStz13gb6XLVfv/yVrmyJobmWJBEZJItG2jjvwWiJwh8n2Wxatnqa57v0xJzHwtuvxJg/8x+dQANADM/tOhIocVEIp4MpokMPlGQOERJt8qfcbTTumorPfd5zHBbfbilnoiixnEIjA9m7gDwZzB+L4hWG3KeWJ774qvbLrLd3538TyDAAeK7AWK1yyctGk4JNVYbfSKReA/YHsPAaAAjwDwMREkATmWQM9iAERBRHoy3GHidiP5GhI1s6Tkl8KxwkhuX/ubKt3f2Ht4V4C6yoRvTWdHRsYFyuSbzThowd/z3nPzwTjfWJWJWFSUAxHGw7kr0+Mk36/2BdvH2F9jIkeO4OZu2B8K0bjpQi6jpdKPo6GjozapMh93ZjEc6nZbV3x05sp2z2eb9yjTu7PH/AeYLGF1XyoqxAAAAAElFTkSuQmCC" alt="AI效能實驗室標誌">回饋練習場<span class="sub" id="where"></span></div>
+  <nav class="stations" id="stations" aria-label="練習階段"></nav>
+</header>
+<main id="app"></main>
+<footer class="bar"><div class="in"><button class="btn ghost" id="back" aria-label="上一步">←</button><button class="btn" id="next">開始</button></div></footer>
+</div>
+<script>
+const KEY='feedback-lab-v2';
+const fresh=()=>({step:0,note:'',pick:-1,cls:{i:0,ans:[],t0:0,t1:0},own:'',tq:{i:0,ans:[]},t:[-1,-1,-1],trig:null,rpk:-1,rps:{},voice:'',vpick:-1,rewrite:'',ask:[],common:[],std:[],stdOwn:'',exp:'',who:[]});
+let S=fresh();
+try{const v=JSON.parse(localStorage.getItem(KEY)||'null');if(v&&typeof v.step==='number')S=Object.assign(fresh(),v)}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+
+const STAR='<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 4 Q56 38 96 50 Q56 62 50 96 Q44 62 4 50 Q44 38 50 4Z" fill="#FFC94A" stroke="#E8A828" stroke-width="3" stroke-linejoin="round"/><ellipse cx="42" cy="50" rx="3.4" ry="4.6" fill="#2E2640"/><ellipse cx="58" cy="50" rx="3.4" ry="4.6" fill="#2E2640"/><path d="M45 58 Q50 63 55 58" fill="none" stroke="#2E2640" stroke-width="2.4" stroke-linecap="round"/></svg>';
+const guide=t=>`<div class="guide">${STAR}<div class="say">${t}</div></div>`;
+const art=(n,alt)=>`<img class="art" src="img/s${n}.jpg" alt="${alt}" width="1200" height="800">`;
+
+const NOTES=[
+ {t:'這個設計沒有靈魂。',w:'設計｜期中評圖的老師'},
+ {t:'你的程式能跑，但沒人看得懂。',w:'資訊｜專題的學長'},
+ {t:'你的紀錄寫得太籠統。',w:'醫護｜臨床實習的指導老師'},
+ {t:'你的論點只是在重述課本。',w:'人文社會｜討論課的教授'},
+ {t:'這份企劃的數字完全站不住腳。',w:'管理｜個案競賽的評審'},
+ {t:'音準沒問題，但沒有感情。',w:'藝術｜術科主修老師'}];
+const TYPES=['欣賞','指導','評量'];
+const CLS=[
+ {q:'你這次上台報告，眼神一直看著聽眾，進步很多。',from:'外語課口頭報告',a:0,why:'欣賞：「我看見你了」，表達認可與鼓勵。'},
+ {q:'引用文獻的時候，記得統一用 APA 格式。',from:'社會科學期末論文',a:1,why:'指導：「這樣會更好」，告訴你怎麼改。'},
+ {q:'這次術科考核，你排在全班前三分之一。',from:'體育／藝術術科',a:2,why:'評量：對照一套標準，告訴你在哪個位置。'},
+ {q:'你的電路板焊得有點亂。',from:'電機實作課',a:2,p:1,why:'混合型：先聽出評量（不夠整齊），再追問「哪幾個焊點要怎麼改？」把指導挑出來。'},
+ {q:'謝謝你昨天留下來，把模型材料都收好。',from:'建築系工作室',a:0,why:'欣賞：感謝也是回饋，讓你知道哪些事值得繼續做。'}];
+const TRG=['真相觸發','人際觸發','自我觸發'];
+const TQ=[
+ {q:'「評審才看了三分鐘，根本不懂我的設計理念。」',from:'設計系評圖之後',a:0,why:'真相觸發：覺得回饋的內容不對、不準。先問：對方看到的是什麼？'},
+ {q:'「學長自己的程式也寫得很亂，憑什麼說我？」',from:'資訊專題檢討之後',a:1,why:'人際觸發：注意力從「說了什麼」跑到「誰說的」。把人和話分開看。'},
+ {q:'「我果然不適合走臨床。」',from:'醫護實習被指正之後',a:2,why:'自我觸發：一件事被放大成整個人。把結論縮小到「這一件事」。'}];
+const SELFQ=[
+ {q:'對方足夠了解我的狀況，以及現實的狀況嗎？',o:['不太了解','部分了解','很了解'],hit:[2,1,0]},
+ {q:'我不舒服，是因為這個人，還是他說的內容？',o:['主要是這個人','兩者都有','主要是內容'],hit:[2,1,0]},
+ {q:'我是不是開始有負面情緒，或「我很差」的想法？',o:['有，很強烈','有一點','沒有'],hit:[2,1,0]}];
+const TIPS=['先理解再判斷。問對方：「你看到的是哪個部分？」','課題分離。對方怎麼說是他的課題，你怎麼做是你的課題。','自我對話。把「我很差」換成「這件事還能更好」。'];
+const STEP3=['謝謝','追問','確認'];
+const RP=[
+ {k:'學科測驗',who:'助教',where:'統計學期中考後，你拿考卷去問助教',open:'你這題觀念完全錯了，考前有讀嗎？',r:[
+  {opts:[{t:'「我有讀啊，是題目出得太偏。」',fb:'這是反駁。話題會變成題目好不好，而不是你哪裡卡住。'},{t:'「謝謝助教願意花時間跟我講。」',ok:1},{t:'（收起考卷，想趕快離開）',fb:'離開了，就拿不到後面最有用的那句話。'}],reply:'好，那我們來看你是哪裡卡住。'},
+  {opts:[{t:'「可以告訴我，是哪一個觀念弄錯了嗎？」',ok:1},{t:'「所以我是不是會被當？」',fb:'這是在問評量。現在先把指導問出來。'},{t:'「好，我回去再讀。」',fb:'沒有追問，你還是不知道要讀哪裡。'}],reply:'你把標準差和標準誤搞混了，後面整題才會用錯公式。'},
+  {opts:[{t:'「我下次會考好。」',fb:'太模糊。對方無法確認你聽懂了什麼。'},{t:'「這題可以給部分分數嗎？」',fb:'這是在談分數。先確認你要怎麼補起來。'},{t:'「所以我先重做這兩個觀念的習題，下週再來找你確認，對嗎？」',ok:1}],reply:'可以，做完帶來，我幫你看。'}]},
+ {k:'報告',who:'教授',where:'行銷企劃書發回來，教授在課後留你下來',open:'這份企劃的市場分析，看不出你自己的觀點。',r:[
+  {opts:[{t:'「謝謝老師直接告訴我。」',ok:1},{t:'「可是我查了很多資料。」',fb:'這是解釋。資料多不等於有觀點，先聽老師怎麼說。'},{t:'「那部分是其他組員負責的。」',fb:'把責任推出去，對方就不會再給你建議了。'}],reply:'資料很多，但都是別人的結論。'},
+  {opts:[{t:'「那要寫到幾頁才夠？」',fb:'這是在問格式。問題出在內容，不是頁數。'},{t:'「可以指一段給我看，哪裡應該加上自己的觀點嗎？」',ok:1},{t:'「好的，我會修改。」',fb:'沒有追問，你還是不知道要改哪裡。'}],reply:'像第三頁，你列了五份報告的數字，卻沒說你怎麼判斷。'},
+  {opts:[{t:'「我會再加強。」',fb:'太模糊。對方無法確認你聽懂了什麼。'},{t:'「所以每段資料後面，我加一句自己的判斷和理由，對嗎？」',ok:1},{t:'「這樣成績會受影響嗎？」',fb:'這是在談評量。先把指導確認清楚。'}],reply:'對，先改第三頁，再拿來給我看。'}]},
+ {k:'專題實驗',who:'學長',where:'資訊專題的程式檢討會，帶你的學長看完你的程式',open:'你的程式能跑，但變數命名亂到沒人能接手。',r:[
+  {opts:[{t:'「能跑不就好了嗎？」',fb:'這是反駁。對方在意的是團隊能不能接手。'},{t:'「之前又沒有人教過我。」',fb:'這是解釋。先承接，再問怎麼改。'},{t:'「謝謝學長幫我看程式。」',ok:1}],reply:'能跑是第一步，接下來要讓隊友看得懂。'},
+  {opts:[{t:'「可以舉一個你覺得最難懂的地方嗎？」',ok:1},{t:'「那你自己的命名就很好嗎？」',fb:'這是人際觸發。把「誰說的」和「說了什麼」分開。'},{t:'「好，我再改改看。」',fb:'沒有追問，你不知道對方的標準是什麼。'}],reply:'像這個函式叫 doStuff2，我看不出它在做什麼。'},
+  {opts:[{t:'「我之後會注意。」',fb:'太模糊。對方無法確認你聽懂了什麼。'},{t:'「所以我先把這個模組的函式改成『動詞加對象』的命名，再請你看，對嗎？」',ok:1},{t:'「這樣專題會過嗎？」',fb:'這是在談評量。先確認做法。'}],reply:'對，先改一個模組就好。'}]},
+ {k:'實習表現',who:'指導老師',where:'醫院實習，你剛向病人說明完用藥，指導老師把你叫到一旁',open:'你剛剛講太快了，病人根本沒聽懂。',r:[
+  {opts:[{t:'「因為後面還有三床要顧。」',fb:'這是解釋。忙是真的，但先聽完對方看到了什麼。'},{t:'「謝謝老師提醒我。」',ok:1},{t:'「可是病人剛剛有點頭啊。」',fb:'這是真相觸發。先問老師看到的是什麼。'}],reply:'我知道你忙。但病人沒聽懂，等於沒有說明。'},
+  {opts:[{t:'「其他同學不也是這樣講嗎？」',fb:'這是比較。話題會從「怎麼改」變成「公不公平」。'},{t:'「好，我下次講慢一點。」',fb:'沒有追問，你不知道是哪一段出了問題。'},{t:'「可以告訴我，剛剛哪一段病人看起來最困惑嗎？」',ok:1}],reply:'講到用藥時間那段，他一直看著藥袋，沒有回應。'},
+  {opts:[{t:'「所以下一床，我講完用藥時間，先請病人自己說一遍，對嗎？」',ok:1},{t:'「我會多練習。」',fb:'太模糊。對方無法確認你聽懂了什麼。'},{t:'「這會影響我的實習成績嗎？」',fb:'這是在談評量。先確認做法。'}],reply:'對，請病人自己說一遍就能確認。下一床我在旁邊看。'}]}];
+const VOICES=['我就是沒有天分。','我永遠做不好。','他一定覺得我很爛。','我不適合讀這個科系。'];
+const REWR=['這件事還能更好，我先改一個地方。','這件事還沒做好，不代表我做不好。','這件事還能請人教我，我去問清楚。'];
+const PEOPLE=[
+ {n:'同班同學',say:'我第一眼不知道要先看哪裡。配色很舒服。'},
+ {n:'助教',say:'主視覺不明確，每個資訊看起來都一樣重要。排版很整齊。'},
+ {n:'授課老師',say:'看不出你想對誰說話。技法沒有問題。'},
+ {n:'業界學長姐',say:'先決定一個主角，其他元素都要退後。'},
+ {n:'外系室友',say:'很漂亮，但我看不懂這是在宣傳什麼。'}];
+const COMMON=[{t:'沒有明確的主角或重點',ok:1},{t:'看不出對象和目的',ok:1},{t:'配色不好看'},{t:'排版不整齊'},{t:'技法不夠好'}];
+const STDS=['一眼（或一句話）就能抓到重點','每個判斷都有依據','外行人也看得懂','交出前，先請一個人看過','對照評分標準，逐項檢查一次'];
+const EXPS=['下一份作品，只先改一個地方','交出前，請一位同學看 3 分鐘','每天花 10 分鐘，只練那一個弱點','下次先講結論，再觀察對方的反應'];
+const ASKERS=['同學','助教','老師','學長姐','外系朋友','實習前輩'];
+const NAMES=['了解流程','寫下指教','分辨回饋','覺察觸發','練習回應','改寫對話','整合標準','帶走行動'];
+
+function opt(act,i,html,cls='',dis=false){return `<button class="opt ${cls}" data-act="${act}" data-i="${i}" ${dis?'disabled':''}>${html}</button>`}
+function myNote(){return S.note.trim()?`<div class="sticky"><small>我的便利貼</small>「${esc(S.note)}」</div>`:`<div class="empty">還沒有便利貼。<button data-go="1">先去選一句</button>，這一站會更有感覺。</div>`}
+
+const V=[];
+V[0]=()=>({label:'開始練習',html:`
+ <p class="eyebrow">從回饋中成長</p>
+ <h1>把一句難受的指教，變成下一步</h1>
+ ${art(1,'一位學生開心地接住一架紙飛機，旁邊的筆記本長出新芽')}
+ <p class="lead">大約 15 分鐘。你會帶著一句自己收到的指教，走過接收、接受、接手三個關鍵。上方的階段可以自由切換。</p>
+ ${guide('我是小火花，會陪你走完全程。你寫的內容只留在這支手機，不會傳給任何人。')}
+ <div class="rows">
+  <div class="row"><b>接收</b><span>分辨回饋類型，判斷自己被哪種觸發</span></div>
+  <div class="row"><b>接受</b><span>練習回應三步，改寫自我對話</span></div>
+  <div class="row"><b>接手</b><span>多方蒐集，整合出自己的評量標準</span></div>
+ </div>`});
+V[1]=()=>({html:`
+ <p class="eyebrow">開場｜一句話便利貼</p>
+ <h2>最近哪一句指教，讓你最難受？</h2>
+ <div class="remind">
+  <p><b>1</b><span>這句話評的是一件事，不是你這個人。</span></p>
+  <p><b>2</b><span>會難受，代表你在乎這件事。這很正常。</span></p>
+  <p><b>3</b><span>寫下來是為了看清楚它，不代表它說的都對。</span></p>
+  <p><b>4</b><span>跟自己說話的語氣，要像對待一位好朋友。</span></p>
+ </div>
+ ${art(2,'一位學生輕輕抱著一張黃色便利貼，頭上飄著愛心對話框')}
+ <p class="lead">選一個最像你的情境，或自己寫。後面每一站都會用到。</p>
+ <div class="opts">${NOTES.map((n,i)=>opt('note',i,`「${n.t}」<small>${n.w}</small>`,S.pick===i?'sel':'')).join('')}
+ ${opt('note',9,'自己寫一句<small>只留在你的手機</small>',S.pick===9?'sel':'')}</div>
+ ${S.pick===9?`<label for="noteText" class="lead">寫下那句話</label><textarea id="noteText" data-bind="note" maxlength="60" placeholder="例如：你這樣畢不了業">${esc(S.note)}</textarea>`:''}`});
+function quiz(key,items,labels,act){
+ const st=S[key],i=st.i;
+ if(i>=items.length)return null;
+ const it=items[i],a=st.ans[i],done=a!==undefined,right=done&&a===it.a,near=done&&it.p===a;
+ return `<div class="meter"><span>第 ${i+1} / ${items.length} 句</span><span id="clock"></span></div>
+ <div class="card"><p class="lead" style="font-size:14px">${it.from}</p><p style="font-size:20px;font-weight:700">${it.q}</p></div>
+ <div class="tri">${labels.map((l,j)=>opt(act,j,l.replace('觸發',''),done?(j===it.a?'ok':(j===a?'no':'')):'',done)).join('')}</div>
+ ${done?`<div class="fb ${right?'ok':near?'tip':'no'}"><b>${right?'答對了':near?'很接近':'再想一下'}</b>${it.why}</div><button class="opt sel" data-act="${act}-next" style="text-align:center">${i+1<items.length?'下一句':'看結果'}</button>`:''}`;
+}
+V[2]=()=>{
+ const q=quiz('cls',CLS,TYPES,'cls');
+ const top=`<p class="eyebrow">接收｜分類賽</p>`;
+ if(q)return {html:`${top}<h2>這句話，是哪一種回饋？</h2>${S.cls.i===0&&S.cls.ans[0]===undefined?art(3,'一位學生把卡片分進畫著愛心、指南針和尺的三個盒子')+guide('欣賞是「我看見你了」，指導是「這樣會更好」，評量是「你在哪個位置」。點下去就開始計時！'):''}${q}`};
+ const score=CLS.filter((c,i)=>S.cls.ans[i]===c.a).length,sec=Math.max(1,Math.round((S.cls.t1-S.cls.t0)/1000));
+ return {html:`${top}<h2>答對 ${score} / 5 句，用了 ${sec} 秒</h2>
+ ${guide('和旁邊的同學比一比。接著看你自己的那一句。')}
+ ${myNote()}
+ <p><b>你的這句話，是哪一種回饋？</b></p>
+ <div class="tri">${TYPES.map((l,j)=>opt('own',j,l,S.own===l?'sel':'')).join('')}</div>
+ ${S.own?`<div class="fb tip"><b>你選了「${S.own}」</b>${S.own==='評量'?'評量只告訴你位置。記得追問「哪裡要怎麼改？」，把指導挑出來。':S.own==='指導'?'指導最能幫你成長。確認你聽懂的做法，和對方想的一樣。':'如果這句話讓你難受，它可能也藏著評量。想想對方真正想說的是什麼。'}</div>`:''}
+ <button class="chip" data-act="cls-reset">再玩一次分類賽</button>`};
+};
+V[3]=()=>{
+ const q=quiz('tq',TQ,TRG,'tq');
+ const top=`<p class="eyebrow">接收｜判斷觸發</p>`;
+ if(q)return {html:`${top}<h2>這個內心反應，是被哪一種觸發？</h2>${S.tq.i===0&&S.tq.ans[0]===undefined?art(4,'一位學生閉上眼睛深呼吸，頭上三朵小雷雲慢慢飄走')+guide('被指教時不舒服很正常。先認出是哪一種觸發，才知道怎麼回應。'):''}${q}`};
+ const done=S.t.every(x=>x>=0);
+ let res='';
+ if(done){
+  const sc=S.t.map((x,i)=>SELFQ[i].hit[x]),mx=Math.max(...sc);
+  const hits=sc.map((s,i)=>s===mx&&mx>0?i:-1).filter(i=>i>=0);
+  S.trig=hits.map(i=>TRG[i]);
+  res=hits.length?`<div class="fb tip"><b>你主要是：${S.trig.join('、')}</b>${hits.map(i=>TIPS[i]).join(' ')}</div>`:`<div class="fb ok"><b>這次沒有明顯的觸發</b>你可以直接進入下一步，練習怎麼回應。</div>`;
+ }
+ return {html:`${top}<h2>換你：用三個問題檢查自己</h2>${myNote()}
+ ${SELFQ.map((s,i)=>`<div class="card"><p><span class="tag ${i===1?'t':i===2?'y':''}">${TRG[i]}</span></p><p><b>${s.q}</b></p><div class="chips">${s.o.map((o,j)=>`<button class="chip ${S.t[i]===j?'sel':''}" data-act="selfq" data-i="${i}" data-j="${j}">${o}</button>`).join('')}</div></div>`).join('')}${res}`};
+};
+V[4]=()=>{
+ const pick=`<div class="chips">${RP.map((x,i)=>`<button class="chip ${S.rpk===i?'sel':''}" data-act="rpk" data-i="${i}">${x.k}</button>`).join('')}</div>`;
+ const top=`<p class="eyebrow">接受｜回應三步</p><h2>選一個情境，練習怎麼回</h2>`;
+ if(S.rpk<0)return {html:`${top}${art(5,'四組學生分別拿著考卷、報告、實驗器材和實習名牌，與指導者對話')}${guide('謝謝、追問、確認。四種情境的說法不太一樣，挑一個最接近你的。')}${pick}`};
+ const sc=RP[S.rpk],r=S.rps[S.rpk]||(S.rps[S.rpk]={i:0,log:[],wrong:-1}),fin=r.i>=3,cur=sc.r[r.i];
+ return {html:`${top}${pick}
+ <p class="lead">${sc.where}</p>
+ <div class="steps3">${STEP3.map((x,i)=>`<div class="${i<r.i?'on':''}">${i+1} ${x}</div>`).join('')}</div>
+ <div class="chat"><div class="msg them"><small>${sc.who}</small>「${sc.open}」</div>
+ ${r.log.map((m,i)=>`<div class="msg me">${sc.r[i].opts[m].t}</div><div class="msg them"><small>${sc.who}</small>${sc.r[i].reply}</div>`).join('')}</div>
+ ${fin?guide('完成了。找旁邊的同學實際演一次：一人當'+sc.who+'，一人回應，再交換。也可以換一個情境再練。')+`<button class="chip" data-act="rp-reset">這個情境再練一次</button>`:`<p><b>第 ${r.i+1} 步：${STEP3[r.i]}</b></p><div class="opts">${cur.opts.map((o,j)=>opt('rp',j,o.t,r.wrong===j?'no':'')).join('')}</div>${r.wrong>=0?`<div class="fb no"><b>換一句試試</b>${cur.opts[r.wrong].fb}</div>`:''}`}`};
+};
+V[5]=()=>({html:`<p class="eyebrow">接受｜改寫自我對話</p><h2>當下，你腦中冒出哪一句？</h2>${art(6,'一位學生照著鏡子，鏡中的自己微笑，塗黑的想法被鉛筆改寫成明亮的對話框')}${myNote()}
+ <div class="opts">${VOICES.map((v,i)=>opt('voice',i,`「${v}」`,S.vpick===i?'sel':'')).join('')}${opt('voice',9,'其他，自己寫',S.vpick===9?'sel':'')}</div>
+ ${S.vpick===9?`<label for="voiceText" class="lead">寫下那句話</label><textarea id="voiceText" data-bind="voice" maxlength="40">${esc(S.voice)}</textarea>`:''}
+ ${S.vpick>=0?`${guide('把評價從「我這個人」拉回「這件事」。例如設計系的小語，把「我沒有天分」改成「這張海報的主角還能更清楚」。')}
+ <p><b>改寫成「這件事還能……」</b></p>
+ <div class="chips">${REWR.map((x,i)=>`<button class="chip" data-act="rewr" data-i="${i}">${x.slice(0,10)}…</button>`).join('')}</div>
+ <label for="rw" class="lead">可以直接改成你自己的話</label><textarea id="rw" data-bind="rewrite" maxlength="60" placeholder="這件事還能……">${esc(S.rewrite)}</textarea>`:''}`});
+V[6]=()=>{
+ const n=S.ask.length,okAsk=n>=1&&n<=3,picked=S.common.length>0;
+ const allRight=COMMON.every((c,i)=>!!c.ok===S.common.includes(i));
+ return {html:`<p class="eyebrow">接手｜多方蒐集</p><h2>一句回饋可能有偏差，多問幾個人</h2>
+ ${art(7,'一位學生從三個人手中收集拼圖，拼成一張有三個勾勾的檢查表')}
+ ${guide('示範情境：設計系的小安，期中海報被老師說「沒有靈魂」。他想再問 1 到 3 個人，你幫他選。')}
+ <div class="chips">${PEOPLE.map((p,i)=>`<button class="chip ${S.ask.includes(i)?'sel':''}" data-act="ask" data-i="${i}">${p.n}</button>`).join('')}</div>
+ ${n>3?`<div class="fb no">平均問 1 到 3 位就夠了，太多反而難整理。</div>`:''}
+ ${okAsk?`<div class="chat">${S.ask.map(i=>`<div class="msg them"><small>${PEOPLE[i].n}</small>${PEOPLE[i].say}</div>`).join('')}</div>
+ <p><b>綜合大家的說法，小安的海報有哪些共通問題？（可複選）</b></p>
+ <div class="chips">${COMMON.map((c,i)=>`<button class="chip ${S.common.includes(i)?'sel':''}" data-act="common" data-i="${i}">${c.t}</button>`).join('')}</div>
+ ${picked?(allRight?`<div class="fb ok"><b>找到了</b>重複出現的地方，才是最值得先改的。「沒有靈魂」很模糊，多問幾個人，才變成兩個可以動手改的方向。</div>`:`<div class="fb no"><b>再對照一次</b>共通問題有兩個。被稱讚的地方（配色、排版、技法）不算。</div>`):''}`:''}
+ <h2>換你：整合出自己的評量標準</h2>
+ <p class="lead">下次交出作品、報告或上場之前，你想用哪幾條先檢查自己？選 1 到 3 條，也可以自己寫。</p>
+ <div class="opts">${STDS.map((s,i)=>opt('std',i,s,S.std.includes(i)?'sel':'')).join('')}</div>
+ ${S.std.length+(S.stdOwn.trim()?1:0)>3?`<div class="fb no">最多 3 條。標準太多，等於沒有標準。</div>`:''}
+ <label for="stdOwn" class="lead">自己寫一條（選填）</label><textarea id="stdOwn" data-bind="stdOwn" maxlength="30" style="min-height:60px" placeholder="例如：病人能自己說出用藥時間">${esc(S.stdOwn)}</textarea>
+ <h2>這週做一個小型實驗</h2>
+ <p class="lead">不用一次到位。先試一小步，驗證這個建議適不適合你。</p>
+ <div class="opts">${EXPS.map((s,i)=>opt('exp',i,s,S.exp===s?'sel':'')).join('')}</div>
+ <p><b>針對你的便利貼，這週想去問誰？（1 到 3 位）</b></p>
+ <div class="chips">${ASKERS.map((p,i)=>`<button class="chip ${S.who.includes(i)?'sel':''}" data-act="who" data-i="${i}">${p}</button>`).join('')}</div>`};
+};
+const myStds=()=>S.std.map(i=>STDS[i]).concat(S.stdOwn.trim()?[S.stdOwn.trim()]:[]).slice(0,3);
+V[7]=()=>({label:'重新練習一次',html:`<p class="eyebrow">完成</p><h2>帶走你的行動圖卡</h2>
+ ${guide('按下方按鈕下載 PNG，或長按圖片儲存。這週做到那個小實驗，記得慶祝一下！')}
+ <img id="cardImg" alt="從回饋中成長圖卡：收到的指教、回饋類型、觸發、自我對話、評量標準與小型實驗" width="1080" height="1350">
+ <button class="opt sel" data-act="dl" style="text-align:center">下載 PNG 圖卡</button>
+ <div id="dlMsg"></div>
+ <div class="fb tip"><b>主動要回饋，只要一句話</b>「你覺得我有哪一件事，正在擋住自己？」</div>
+ <p class="copy">著作權Ⓒ 2026 AI效能實驗室 許秉軒 版權所有</p>`});
+
+// ---------- image card ----------
+const loadImg=src=>new Promise(res=>{const im=new Image();im.onload=()=>res(im);im.onerror=()=>res(null);im.src=src});
+let cardBlob=null,cardSeq=0;
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function wrap(c,t,w){const out=[];let cur='';for(const ch of t){if(ch==='\n'){out.push(cur);cur='';continue}if(c.measureText(cur+ch).width>w&&cur){out.push(cur);cur=ch}else cur+=ch}if(cur)out.push(cur);return out}
+function paint(c,W,ill,logo,draw){
+ const F=(s,b)=>{c.font=`${b?700:400} ${s}px "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif`};
+ const P='#603E8D',INK='#2E2640',MU='#5E5676',YE='#FFC94A',MI='#EFEAF7';
+ const text=(t,x,y,col)=>{if(draw){c.fillStyle=col;c.fillText(t,x,y)}};
+ const box=(x,y,w,h,r,col)=>{if(draw){rr(c,x,y,w,h,r);c.fillStyle=col;c.fill()}};
+ c.textBaseline='top';
+ if(draw){c.fillStyle=MI;c.fillRect(0,0,W,c.canvas.height);box(40,40,W-80,c.canvas.height-80,48,'#fff')}
+ // header
+ if(draw){c.save();rr(c,40,40,W-80,300,48);c.clip();c.fillStyle=P;c.fillRect(40,40,W-80,300);c.restore()}
+ if(draw&&logo){c.beginPath();c.arc(140,150,56,0,7);c.fillStyle='#fff';c.fill();c.drawImage(logo,92,102,96,96)}
+ F(68,1);text('從回饋中成長',218,96,'#fff');F(34,1);text('成功接收指教的三大關鍵',220,188,YE);
+ F(26,0);text('接收 ・ 接受 ・ 接手',220,244,'#E4DCF2');
+ if(draw&&ill){c.save();rr(c,700,90,300,200,28);c.clip();c.drawImage(ill,700,90,300,200);c.restore();rr(c,700,90,300,200,28);c.strokeStyle='#fff';c.lineWidth=6;c.stroke()}
+ let y=380;const X=100,TW=W-200;
+ // sticky note
+ F(44,1);const nl=wrap(c,'「'+(S.note.trim()||'（還沒選便利貼）')+'」',TW-80);
+ const nh=70+nl.length*62+30;box(X,y,TW,nh,24,'#FFF4D6');
+ F(26,1);text('收到的指教',X+40,y+28,'#8A6200');F(44,1);nl.forEach((l,i)=>text(l,X+40,y+70+i*62,INK));y+=nh+44;
+ const sec=(label,lines,bold)=>{F(26,1);text(label,X,y,P);y+=42;F(38,bold);lines.forEach(t=>wrap(c,t,TW).forEach(l=>{text(l,X,y,INK);y+=54}));y+=30};
+ sec('接收',['類型：'+(S.own||'未選')+'　　觸發：'+((S.trig&&S.trig.length)?S.trig.map(t=>t.replace('觸發','')).join('、'):'不明顯')],true);
+ if(draw){c.fillStyle=MI;c.fillRect(X,y-14,TW,4)}y+=14;
+ F(26,1);text('接受｜我的自我對話',X,y,P);y+=42;
+ F(34,0);wrap(c,'「'+(S.voice.trim()||'……')+'」',TW).forEach(l=>{text(l,X,y,MU);y+=48});
+ F(40,1);wrap(c,'→「'+(S.rewrite.trim()||'這件事還能更好')+'」',TW).forEach(l=>{text(l,X,y,P);y+=58});y+=30;
+ if(draw){c.fillStyle=MI;c.fillRect(X,y-14,TW,4)}y+=14;
+ F(26,1);text('接手｜我的評量標準',X,y,P);y+=46;
+ const st=myStds();(st.length?st:['（還沒選標準）']).forEach(t=>{F(36,1);const ls=wrap(c,t,TW-70);if(draw){c.beginPath();c.arc(X+22,y+24,22,0,7);c.fillStyle='#36C2B4';c.fill();c.strokeStyle='#fff';c.lineWidth=6;c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(X+11,y+25);c.lineTo(X+19,y+33);c.lineTo(X+33,y+16);c.stroke()}ls.forEach(l=>{text(l,X+66,y,INK);y+=50});y+=14});y+=20;
+ // experiment pill
+ F(36,1);const el=wrap(c,S.exp||'（還沒選小型實驗）',TW-80);const wl=S.who.length?'我要去問：'+S.who.map(i=>ASKERS[i]).join('、'):'';
+ const eh=66+el.length*50+(wl?50:0)+26;box(X,y,TW,eh,28,MI);
+ F(26,1);text('這週的小型實驗',X+40,y+24,P);F(36,1);el.forEach((l,i)=>text(l,X+40,y+64+i*50,INK));
+ if(wl){F(30,0);text(wl,X+40,y+64+el.length*50+4,MU)}y+=eh+40;
+ F(34,1);const cw=c.measureText('做到了，就慶祝這個小成功').width;box((W-cw)/2-44,y,cw+88,76,38,YE);text('做到了，就慶祝這個小成功',(W-cw)/2,y+18,INK);y+=76+34;
+ F(22,0);const cp='著作權Ⓒ 2026 AI效能實驗室 許秉軒 版權所有';text(cp,(W-c.measureText(cp).width)/2,y,MU);y+=22+70;
+ return y;
+}
+async function makeCard(){
+ const seq=++cardSeq,W=1080;
+ try{await Promise.all([document.fonts.load('700 40px "Noto Sans TC"','從回饋中成長成功接收指教的三大關鍵'+S.note+S.voice+S.rewrite+S.stdOwn),document.fonts.load('400 30px "Noto Sans TC"','接收接受接手')])}catch(e){}
+ const [ill,logo]=await Promise.all([loadImg('img/s8.jpg'),loadImg($('logoImg').src)]);
+ const cv=document.createElement('canvas');cv.width=W;cv.height=10;
+ const h=Math.max(1350,paint(cv.getContext('2d'),W,null,null,false));
+ cv.height=h;paint(cv.getContext('2d'),W,ill,logo,true);
+ if(seq!==cardSeq)return;
+ const el=$('cardImg');if(!el)return;
+ el.height=h;
+ try{el.src=cv.toDataURL('image/png')}catch(e){}
+ cv.toBlob(b=>{if(seq===cardSeq)cardBlob=b},'image/png');
+}
+async function download(){
+ const m=$('dlMsg');
+ const manual=()=>{m.innerHTML='<div class="fb tip"><b>這個畫面無法直接下載</b>請長按上方圖卡，選「儲存影像」；電腦請按右鍵另存。</div>'};
+ if(!cardBlob){manual();return}
+ let dl=null;
+ try{if(window.claude&&window.claude.use)dl=await window.claude.use('downloads')}catch(e){}
+ if(!dl){try{const a=document.createElement('a');a.href=URL.createObjectURL(cardBlob);a.download='從回饋中成長_我的圖卡.png';document.body.appendChild(a);a.click();a.remove();m.innerHTML='<div class="fb ok">已開始下載。如果沒有反應，請長按上方圖卡儲存。</div>'}catch(e){manual()}return}
+ try{await dl.save({filename:'從回饋中成長_我的圖卡.png',data:cardBlob});m.innerHTML='<div class="fb ok">圖卡已儲存。</div>'}
+ catch(e){if(e&&e.code==='declined')m.innerHTML='';else manual()}
+}
+
+let view;
+function render(scroll){
+ view=V[S.step]();
+ $('app').innerHTML=view.html;
+ $('next').textContent=view.label||'下一步';
+ $('back').style.visibility=S.step===0?'hidden':'visible';
+ $('where').textContent=(S.step+1)+' / '+NAMES.length;
+ $('stations').innerHTML=NAMES.map((n,i)=>`<button data-go="${i}" class="${i<S.step?'done':i===S.step?'now':i===S.step+1?'up':''}" ${i===S.step?'aria-current="step"':''}><b>${i<S.step?'✓':i+1}</b><span>${n}</span></button>`).join('');
+ if(scroll)window.scrollTo(0,0);
+ save();tick();
+ if(S.step===7){cardBlob=null;makeCard()}
+}
+function tick(){const c=$('clock');if(c&&S.step===2&&S.cls.t0&&!S.cls.t1)c.textContent=Math.round((Date.now()-S.cls.t0)/1000)+' 秒'}
+setInterval(tick,500);
+const toggle=(arr,i)=>{const k=arr.indexOf(i);k>=0?arr.splice(k,1):arr.push(i)};
+
+document.addEventListener('click',e=>{
+ const g=e.target.closest('[data-go]');
+ if(g){S.step=+g.dataset.go;render(true);return}
+ const b=e.target.closest('[data-act]');if(!b)return;
+ const a=b.dataset.act,i=+b.dataset.i;
+ if(a==='note'){S.pick=i;S.note=i===9?'':NOTES[i].t}
+ else if(a==='cls'){if(!S.cls.t0)S.cls.t0=Date.now();S.cls.ans[S.cls.i]=i}
+ else if(a==='cls-next'){S.cls.i++;if(S.cls.i>=CLS.length)S.cls.t1=Date.now()}
+ else if(a==='cls-reset'){S.cls={i:0,ans:[],t0:0,t1:0}}
+ else if(a==='own'){S.own=TYPES[i]}
+ else if(a==='tq'){S.tq.ans[S.tq.i]=i}
+ else if(a==='tq-next'){S.tq.i++}
+ else if(a==='selfq'){S.t[i]=+b.dataset.j}
+ else if(a==='rpk'){S.rpk=i}
+ else if(a==='rp'){const r=S.rps[S.rpk],o=RP[S.rpk].r[r.i].opts[i];if(o.ok){r.log.push(i);r.i++;r.wrong=-1}else r.wrong=i}
+ else if(a==='rp-reset'){S.rps[S.rpk]={i:0,log:[],wrong:-1}}
+ else if(a==='voice'){S.vpick=i;S.voice=i===9?'':VOICES[i];if(!S.rewrite)S.rewrite='這件事還能'}
+ else if(a==='rewr'){S.rewrite=REWR[i]}
+ else if(a==='ask'){toggle(S.ask,i)}
+ else if(a==='common'){toggle(S.common,i)}
+ else if(a==='std'){toggle(S.std,i)}
+ else if(a==='exp'){S.exp=EXPS[i]}
+ else if(a==='who'){toggle(S.who,i)}
+ else if(a==='dl'){download();return}
+ render(false);
+});
+document.addEventListener('input',e=>{const k=e.target.dataset.bind;if(!k)return;S[k]=e.target.value;save()});
+$('next').addEventListener('click',()=>{
+ if(S.step===7){S=fresh();render(true);return}
+ S.step++;render(true);
+});
+$('back').addEventListener('click',()=>{if(S.step>0){S.step--;render(true)}});
+render(false);
+</script>
+</body>
+</html>
